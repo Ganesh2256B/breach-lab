@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Breach Sentinel | SOC Intelligence</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --text: #f7f7f8;
+            --muted: #8b8988;
+            --violet: #9312ff;
+            --violet-light: #a020ff;
+            --violet-dark: #7a1cf8;
+            --green: #45b558;
+            --red: #f03b2a;
+            --glass: rgba(15, 23, 42, 0.8);
+            --border: rgba(147, 18, 255, 0.3);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        /* --- SCALING ENGINE --- */
+        .stage {
+            position: relative;
+            width: 1672px;
+            height: 941px;
+            margin: 0 auto;
+            transform-origin: top center;
+        }
+
+        /* --- BACKGROUND LAYERS --- */
+        .sky {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: #000;
+            z-index: -1;
+        }
+
+        #stars-canvas {
+            position: absolute;
+            top: 0; left: 0;
+            width: 100%; height: 100%;
+        }
+
+        .planet-video {
+            position: absolute;
+            top: 0; left: 50%;
+            transform: translateX(-50%);
+            width: 1672px;
+            height: 717px;
+            object-fit: cover;
+            mix-blend-mode: screen;
+            opacity: 0;
+            transition: opacity 0.8s ease-in;
+            pointer-events: none;
+        }
+
+        /* --- NAVIGATION --- */
+        .nav {
+            position: absolute;
+            top: 40px; left: 0; width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 80px;
+            z-index: 100;
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--text);
+            text-decoration: none;
+        }
+        .logo-bolt {
+            width: 32px; height: 32px;
+            background: var(--violet);
+            clip-path: polygon(40% 0%, 100% 40%, 60% 40%, 80% 100%, 20% 50%, 40% 50%);
+        }
+
+        .menu {
+            display: flex;
+            gap: 32px;
+            align-items: center;
+        }
+        .menu a {
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        .menu a:hover { color: var(--text); }
+        .menu a.active {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            padding: 8px 16px;
+            border-radius: 20px;
+        }
+
+        .btn-pill {
+            padding: 10px 24px;
+            border-radius: 99px;
+            font-weight: 600;
+            font-size: 15px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+        }
+        .btn-violet {
+            background: linear-gradient(to right, var(--violet-light), var(--violet-dark));
+            color: white;
+            box-shadow: 0 0 20px rgba(147, 18, 255, 0.4);
+        }
+        .btn-violet:hover {
+            box-shadow: 0 0 30px rgba(147, 18, 255, 0.6);
+            transform: translateY(-2px);
+        }
+        .btn-dark {
+            background: rgba(255,255,255,0.05);
+            color: var(--text);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .btn-dark:hover { background: rgba(255,255,255,0.1); }
+
+        /* --- HERO SECTION --- */
+        .hero {
+            position: absolute;
+            top: 320px; left: 0; width: 100%;
+            text-align: center;
+            z-index: 10;
+        }
+        .headline {
+            font-family: 'Outfit', sans-serif;
+            font-size: 84px;
+            line-height: 1.1;
+            margin-bottom: 24px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .headline span {
+            background: linear-gradient(to right, #fff, var(--violet-light));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .lede {
+            font-size: 20px;
+            color: var(--muted);
+            max-width: 700px;
+            margin: 0 auto 40px;
+            line-height: 1.6;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+        .hero-btns {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            opacity: 0;
+            transform: translateY(30px);
+        }
+
+        /* --- DASHBOARD PANEL --- */
+        .dashboard-panel {
+            position: absolute;
+            top: 651px; left: 50%;
+            transform: translateX(-50%);
+            width: 1204px;
+            height: 350px;
+            background: var(--glass);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            display: flex;
+            overflow: hidden;
+            opacity: 0;
+            transform: translate(-50%, 100px);
+            transition: all 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+        }
+        .dash-glow {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: linear-gradient(90deg, transparent, var(--violet), transparent);
+            box-shadow: 0 0 15px var(--violet);
+        }
+
+        .dash-sidebar {
+            width: 240px;
+            border-right: 1px solid rgba(255,255,255,0.05);
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+        .dash-main {
+            flex: 1;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--muted);
+            font-size: 14px;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+        .sidebar-item.active {
+            color: var(--text);
+            background: rgba(147, 18, 255, 0.1);
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 24px;
+        }
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            padding: 20px;
+            border-radius: 16px;
+            border: 1px solid rgba(255,255,255,0.05);
+        }
+        .stat-label { color: var(--muted); font-size: 12px; margin-bottom: 8px; }
+        .stat-value { font-size: 24px; font-weight: 600; display: flex; align-items: center; gap: 10px; }
+        .stat-delta { font-size: 14px; font-weight: 400; }
+        .delta-up { color: var(--green); }
+        .delta-down { color: var(--red); }
+
+        .chart-container {
+            flex: 1;
+            background: rgba(0,0,0,0.2);
+            border-radius: 16px;
+            padding: 20px;
+            border: 1px solid rgba(255,255,255,0.05);
+            display: flex;
+            flex-direction: column;
+        }
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: var(--muted);
+        }
+
+        .fake-chart {
+            flex: 1;
+            width: 100%;
+            height: 100px;
+            background: linear-gradient(to top, rgba(147, 18, 255, 0.2), transparent);
+            border-bottom: 2px solid var(--violet);
+            position: relative;
+            overflow: hidden;
+        }
+        .chart-line {
+            position: absolute;
+            bottom: 0; left: 0; width: 100%; height: 100%;
+            stroke: var(--violet);
+            fill: none;
+            stroke-width: 3;
+        }
+
+        /* --- MOBILE --- */
+        @media (max-width: 900px) {
+            .stage { width: 100vw; height: auto; transform: none !important; }
+            .nav { padding: 0 20px; top: 20px; }
+            .menu { display: none; }
+            .hero { position: relative; top: 120px; padding: 0 20px; }
+            .headline { font-size: 48px; }
+            .dashboard-panel {
+                position: relative;
+                top: 0;
+                width: 90%;
+                margin: 40px auto;
+                flex-direction: column;
+                height: auto;
+                transform: none;
+            }
+            .dash-sidebar { width: 100%; border-right: 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sky">
+        <canvas id="stars-canvas"></canvas>
+        <video class="planet-video" autoplay muted loop playsinline>
+            <source src="https://d2ol7oe51mr4n9.cloudfront.net/user_38xzZboKViGWJOttwIXH07lWA1P/e859f229-8ebd-43fb-a5a0-58006ba75327.mp4" type="video/mp4">
+        </video>
+    </div>
+
+    <div class="stage" id="stage">
+        <nav class="nav" id="nav">
+            <a href="#" class="logo">
+                <div class="logo-bolt"></div>
+                <span>BreachSentinel</span>
+            </a>
+            <div class="menu">
+                <a href="#" class="active">Home</a>
+                <a href="http://localhost:3000/detections">Detections</a>
+                <a href="http://localhost:3000/verify">Attribution</a>
+                <a href="http://localhost:3000/reports">Reports</a>
+                <a href="#">FAQ</a>
+            </div>
+            <a href="http://localhost:3000" class="btn-pill btn-violet">Launch SOC Dashboard</a>
+        </nav>
+
+        <div class="hero" style="display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center;">
+            <h1 class="headline" id="headline" style="margin: 0 auto; width: 100%;">
+                <span style="font-size: 110px;">BreachSentinel</span><br>
+                <span style="font-size: 64px; opacity: 0.9;">Detect Faster. Attribute Smarter.</span>
+            </h1>
+            <p class="lede" id="lede" style="margin: 20px auto 40px; text-align: center; width: 100%; max-width: 800px;">
+                The first fully integrated on-chain breach detection system. No more guesswork, no more delays — BreachSentinel empowers you to track exfiltration and prove sources in real-time.
+            </p>
+            <div class="hero-btns" id="hero-btns" style="display: flex; gap: 20px; justify-content: center; width: 100%;">
+                <a href="http://localhost:3000" class="btn-pill btn-violet">Launch SOC Dashboard</a>
+                <a href="#docs" class="btn-pill btn-dark">View Docs</a>
+            </div>
+        </div>
+
+        <div class="dashboard-panel" id="dash">
+            <div class="dash-glow"></div>
+            <div class="dash-sidebar">
+                <div style="display:flex; align-items:center; gap:10px; font-weight:600; margin-bottom:20px;">
+                    <div class="logo-bolt" style="width:20px; height:20px;"></div>
+                    Sentinel v1.0
+                </div>
+                <a href="#" class="sidebar-item active">📊 Dashboard</a>
+                <a href="#" class="sidebar-item">🔍 Live Snipes</a>
+                <a href="#" class="sidebar-item">⚙️ Settings</a>
+                <div style="margin-top:auto; background: rgba(147, 18, 255, 0.1); padding: 15px; border-radius: 12px; border: 1px solid var(--border);">
+                    <p style="font-size: 12px; color: var(--violet); font-weight: 600; margin-bottom: 10px;">Sentinel Pro</p>
+                    <p style="font-size: 11px; color: var(--muted); margin-bottom: 12px;">Get advanced AI attribution.</p>
+                    <button class="btn-pill btn-violet" style="width: 100%; font-size: 12px; padding: 6px;">Upgrade</button>
+                </div>
+            </div>
+            <div class="dash-main">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; gap:15px;">
+                        <span style="color:var(--muted); font-size:14px;">Security Analyst: <b>Alex T.</b></span>
+                        <span style="color:var(--muted); font-size:14px;">ID: 0x3f4...9c7e</span>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <div style="width:8px; height:8px; background:var(--green); border-radius:50%;"></div>
+                        <span style="font-size:12px; color:var(--muted);">System Online</span>
+                    </div>
+                </div>
+
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-label">Detections (Last 24h)</div>
+                        <div class="stat-value">1,284 <span class="stat-delta delta-up">+8.4%</span></div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">Avg. Time to Detect</div>
+                        <div class="stat-value">0.42s <span class="stat-delta delta-down">-12%</span></div>
+                    </div>
+                </div>
+
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <span>Detection Velocity (Hourly)</span>
+                        <span style="color:var(--violet)">Active Window</span>
+                    </div>
+                    <div class="fake-chart">
+                        <svg class="chart-line" viewBox="0 0 1000 100" preserveAspectRatio="none">
+                            <path d="M0,80 L100,70 L200,90 L300,40 L400,60 L500,20 L600,50 L700,10 L800,40 L900,30 L1000,50"
+                                  stroke="url(#grad)" stroke-width="3" fill="none" />
+                            <defs>
+                                <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%">
+                                    <stop offset="0%" style="stop-color:var(--violet-light);stop-opacity:1" />
+                                    <stop offset="100%" style="stop-color:var(--violet-dark);stop-opacity:1" />
+                                </linearGradient>
+                            </defs>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function scale() {
+            const s = Math.min(window.innerWidth / 1672, window.innerHeight / 941);
+            document.getElementById('stage').style.transform = `scale(${s})`;
+        }
+        window.addEventListener('resize', scale);
+        scale();
+
+        const canvas = document.getElementById('stars-canvas');
+        const ctx = canvas.getContext('2d');
+        let stars = [];
+
+        function initStars() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            stars = [];
+            for(let i=0; i<200; i++) {
+                stars.push({
+                    x: Math.random() * canvas.width,
+                    y: Math.random() * canvas.height,
+                    size: Math.random() * 1.5,
+                    opacity: Math.random()
+                });
+            }
+        }
+
+        function drawStars() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'white';
+            stars.forEach(s => {
+                ctx.globalAlpha = s.opacity;
+                ctx.beginPath();
+                ctx.arc(s.x, s.y, s.size, 0, Math.PI*2);
+                ctx.fill();
+            });
+            requestAnimationFrame(drawStars);
+        }
+
+        initStars();
+        drawStars();
+        window.addEventListener('resize', initStars);
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const v = document.querySelector('.planet-video');
+            v.style.opacity = '1';
+            const nav = document.getElementById('nav');
+            const headline = document.getElementById('headline');
+            const lede = document.getElementById('lede');
+            const btns = document.getElementById('hero-btns');
+            const dash = document.getElementById('dash');
+            setTimeout(() => {
+                nav.style.opacity = '1';
+                nav.style.transform = 'translateY(0)';
+                nav.style.transition = 'all 0.8s ease-out';
+            }, 200);
+            setTimeout(() => {
+                headline.style.opacity = '1';
+                headline.style.transform = 'translateY(0)';
+                headline.style.transition = 'all 0.8s ease-out';
+            }, 600);
+            setTimeout(() => {
+                lede.style.opacity = '1';
+                lede.style.transform = 'translateY(0)';
+                lede.style.transition = 'all 0.8s ease-out';
+            }, 900);
+            setTimeout(() => {
+                btns.style.opacity = '1';
+                btns.style.transform = 'translateY(0)';
+                btns.style.transition = 'all 0.8s ease-out';
+            }, 1200);
+            setTimeout(() => {
+                dash.style.opacity = '1';
+                dash.style.transform = 'translate(-50%, 0)';
+                dash.style.transition = 'all 1s cubic-bezier(0.2, 0.8, 0.2, 1)';
+            }, 1600);
+        });
+    </script>
+</body>
+</html>

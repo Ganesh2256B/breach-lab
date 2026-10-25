@@ -1,0 +1,38 @@
+version: '3.8'
+
+services:
+  meridian-bank:
+    build: ./exfil-lab
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./exfil-lab/access.log:/app/access.log
+      - ./exfil-lab/seed_data.json:/app/seed_data.json
+    networks:
+      - breach-net
+
+  breach-sentinel:
+    build: ./breach-sentinel
+    volumes:
+      - ./exfil-lab/access.log:/app/access.log
+      - ./exfil-lab/seed_data.json:/app/seed_data.json
+      - ./breach-sentinel/detections.json:/app/detections.json
+    depends_on:
+      - meridian-bank
+    networks:
+      - breach-net
+
+  soc-dashboard:
+    build: ./dashboard
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./breach-sentinel/detections.json:/app/detections.json
+    depends_on:
+      - breach-sentinel
+    networks:
+      - breach-net
+
+networks:
+  breach-net:
+    driver: bridge

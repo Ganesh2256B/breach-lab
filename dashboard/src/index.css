@@ -1,0 +1,35 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: 0 0% 0%;
+  --foreground: 210 40% 98%;
+  --border: 265 80% 30%;
+  --violet: #9312ff;
+  --violet-light: #a020ff;
+  --violet-dark: #7a1cf8;
+}
+
+body {
+  background-color: #000;
+  color: #f7f7f8;
+  font-family: 'Inter', sans-serif;
+}
+
+.glass-panel {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(147, 18, 255, 0.3);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.8);
+}
+
+.violet-glow {
+  box-shadow: 0 0 20px rgba(147, 18, 255, 0.4);
+}
+
+.text-gradient {
+  background: linear-gradient(to right, #fff, #a020ff);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}

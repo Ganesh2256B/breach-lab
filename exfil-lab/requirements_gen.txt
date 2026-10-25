@@ -1,0 +1,2 @@
+# Requirements for the data generator
+faker==24.14.1
