@@ -27,7 +27,7 @@ This project demonstrates the full lifecycle of a data breach: from initial vuln
 ### Deployment
 ```bash
 # Clone the repo
-git clone <your-repo-url>
+git clone https://github.com/Ganesh2256B/breach-lab.git
 cd breach-lab
 
 # Spin up the entire lab
